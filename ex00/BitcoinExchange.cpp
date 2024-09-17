@@ -6,23 +6,41 @@
 /*   By: mgayout <mgayout@student.42nice.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 08:13:11 by mgayout           #+#    #+#             */
-/*   Updated: 2024/09/16 17:02:31 by mgayout          ###   ########.fr       */
+/*   Updated: 2024/09/17 16:52:22 by mgayout          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "BitcoinExchange.hpp"
 
-BitcoinExchange::BitcoinExchange() : _error("")
+BitcoinExchange::BitcoinExchange() : _err(0)
 {
 	std::ifstream	file("data.csv");
+	std::string		line, date, value;
 
-	if (!file)
+	if (!file.is_open())
+	{
 		std::cout << "Error: 'data.csv' not found" << std::endl;
-	else
-		this->fillMap((char*)"data.csv", true);
+		this->_err = 1;
+		return;	
+	}
+	while (std::getline(file, line))
+	{
+		if (line == "date,exchange_rate" || !line.size())
+			continue;
+		if (line.size() >= 11)
+		{
+			date = line.substr(0, 10);
+			value = line.substr(11, line.size() - 11);
+		}
+		if (line.size() >= 11 && this->checkDate(date) && this->checkValue(value, false) && line.find(',') == 10)
+			this->_data.insert(std::make_pair(date, value));
+	}
+	if (!this->_data.size())
+		this->_err = 1;
+	file.close();
 }
 
-BitcoinExchange::BitcoinExchange(const BitcoinExchange& other) : _error(other._error)
+BitcoinExchange::BitcoinExchange(const BitcoinExchange& other) : _err(other._err)
 {
 
 }
@@ -38,43 +56,109 @@ BitcoinExchange::~BitcoinExchange()
 	
 }
 
-void	BitcoinExchange::fillMap(char *arg, bool b)
+int		BitcoinExchange::getErr()
 {
-	std::ifstream	file(arg);
-	std::string		line;
-	std::string		first;
-	std::string		second;
+	return this->_err;
+}
 
-	for (std::string line; std::getline(file, line) && b;)
-	{
-		if (line != "date,exchange_rate")
-		{
-			first = line.substr(0, 10);
-			second = line.substr(11, line.size());
-			_data.insert(std::make_pair(first, second));	
-		}
-	}
+int		BitcoinExchange::checkDate(std::string date)
+{
+	std::string	newDate = date;
+	std::string	year, month, day;
+	int			y, m, d;
 
-	for (std::string line; std::getline(file, line) && !b;)
+	if (date[4] != '-' || date[7] != '-')
+		return 0;
+	newDate.erase(std::remove(newDate.begin(), newDate.end(), '-'), newDate.end());
+	for (size_t i = 0; i != newDate.size(); i++)
+		if (!std::isdigit(newDate[i]))
+			return 0;
+	year = newDate.substr(0, 4);
+	month = newDate.substr(4, 2);
+	day = newDate.substr(6, 2);
+	y = std::atoi(year.c_str());
+	m = std::atoi(month.c_str());
+	d = std::atoi(day.c_str());
+	if (!m || m > 12)
+		return 0;
+	if (m == 2)
 	{
-		first = line.substr(0, 12);
-		second = line.substr(12, line.size());
-		_input.insert(std::make_pair(first, second));	
+		if (y % 4 == 0 && (!d || d > 29))
+			return 0;
+		else if (y % 4 != 0 && (!d || d > 28))
+			return 0;
 	}
+	else if (((m < 8 && m % 2 != 0) || (m > 7 && m % 2 == 0)) && (!d || d > 31))
+		return 0;
+	else if (((m < 8 && m % 2 == 0) || (m > 7 && m % 2 != 0)) && (!d || d > 30))
+		return 0;
+	return 1;
+}
+
+int		BitcoinExchange::checkValue(std::string value, bool b)
+{
+
+	std::string	newValue = value;;
+	double		d;
+
+	if (value.find('.'))
+		newValue.erase(std::remove(newValue.begin(), newValue.end(), '.'), newValue.end());
+	for (size_t i = 0; i != newValue.size(); i++)
+		if (!std::isdigit(newValue[i]))
+			return 0;
+	if (b)
+	{
+		d = std::atof(value.c_str());
+		if (d < 0 || d > 1000)
+			return 0;
+	}
+	return 1;
 }
 
 void	BitcoinExchange::init(char *arg)
 {
-	std::ifstream	file;
+	std::ifstream	file(arg);
+	std::string		line, date, value, split;
 
-	file.open(arg);
 	if (!file.is_open())
-		std::cout << "Error: parameter have to be a readable file" << std::endl;
-	else
-		this->fillMap(arg, false);
-
-	
+	{
+		std::cout << "Error: file not found" << std::endl;
+		return;	
+	}
+	while (std::getline(file, line))
+	{
+		if (!line.size())
+			continue;
+		if (line.size() >= 13)
+		{
+			date = line.substr(0, 10);
+			value = line.substr(13, line.size() - 13);
+			split = line.substr(10, 3);
+		}
+		if (line.size() >= 13 && this->checkDate(date) && this->checkValue(value, true) && split == " | ")
+			this->compare(date, value);
+		else
+			std::cout << "Error: bad format => " << line << std::endl;
+	}
+	file.close();
 }
 
-//for (std::map<std::string, std::string>::iterator it = _data.begin(); it != _data.end(); it++)
-			//std::cout << it->first << " | " << it->second << std::endl;
+void	BitcoinExchange::compare(std::string date, std::string value)
+{
+	double	rate, vvalue;
+
+	for (std::map<std::string, std::string>::iterator it = _data.begin(); it != _data.end(); it++)
+	{
+		rate = std::atof(it->second.c_str());
+		vvalue = std::atof(value.c_str());
+		if (it->first == date && rate == vvalue)
+			this->find(date, rate, vvalue);
+	}
+}
+
+void	BitcoinExchange::find(std::string date, double rate, double value)
+{
+	double result = rate * value;
+
+	std::cout << date << " => " << std::fixed << std::setprecision(2) << result << std::endl;
+}
