@@ -39,3 +39,5 @@ int	main(int argc, char **argv)
 
 	return 0;
 }
+
+//shuf -i 0-100000 -n 1000 | tr '\n' ' '

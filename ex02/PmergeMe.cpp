@@ -123,7 +123,7 @@ void	PmergeMe::insert(std::vector<std::string> vec)
 	{
 		cast = std::atoi(vec[i].c_str());
 		_arr.push_back(cast);
-		_lst.push_back(cast);
+		_dq.push_back(cast);
 	}
 }
 
@@ -134,31 +134,151 @@ void	PmergeMe::init()
 		std::cout << this->_arr[i] << " ";
 	std::cout << std::endl;
 
-	clock_t start = std::clock();
-	this->sortArr();
-	clock_t end = std::clock();
-	this->_time_arr = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000;
+	clock_t start1 = std::clock();
+	this->sortArr(0, this->_arr.size() - 1);
+	clock_t end1 = std::clock();
+	this->_time_arr = static_cast<double>(end1 - start1) / CLOCKS_PER_SEC * 1000;
 
-	start = std::clock();
-	this->sortLst();
-	end = std::clock();
-	this->_time_lst = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000;
+	clock_t	start2 = std::clock();
+	this->sortDq(0, this->_dq.size() - 1);
+	clock_t	end2 = std::clock();
+	this->_time_dq = static_cast<double>(end2 - start2) / CLOCKS_PER_SEC * 1000;
 
 	std::cout << "After: ";
-	for	(std::list<int>::iterator it = this->_lst.begin(); it != this->_lst.end(); it++)
-		std::cout << *it << " ";
+	for	(size_t	i = 0; i != this->_dq.size(); i++)
+		std::cout << this->_dq[i] << " ";
 	std::cout << std::endl;
 
-	std::cout << "Time to process a range of " << this->_arr.size() << " elements with std::vector : " << this->_time_arr << std::endl;
-	std::cout << "Time to process a range of " << this->_lst.size() << " elements with std::list : " << this->_time_lst << std::endl;
+	std::cout << "Time to process a range of " << this->_arr.size() << " elements with std::vector : " << this->_time_arr << " ms." << std::endl;
+	std::cout << "Time to process a range of " << this->_dq.size() << " elements with std::deque : " << this->_time_dq << " ms." << std::endl;
 }
 
-void	PmergeMe::sortArr()
+void	PmergeMe::sortArr(int begin, int end)
 {
+	if (end - begin > this->_limit)
+	{
+		int	mid = (begin + end) / 2;
 
+		this->sortArr(begin, mid);
+		this->sortArr(mid + 1, end);
+		this->mergeArr(begin, mid, end);
+	}
+	else
+		this->insertArr(begin, end);
 }
 
-void	PmergeMe::sortLst()
+void	PmergeMe::mergeArr(int begin, int mid, int end)
 {
+	int	n1 = mid - begin + 1;
+	int	n2 = end - mid;
+	int	right_i = 0;
+	int	left_i = 0;
 
+	std::vector<int> left(this->_arr.begin() + begin, this->_arr.begin() + mid + 1);
+	std::vector<int> right(this->_arr.begin() + mid + 1, this->_arr.begin() + end + 1);
+
+	for (int i = begin; i <= end; i++)
+	{
+		if (right_i == n2)
+		{
+			this->_arr[i] = left[left_i];
+			left_i++;
+		}
+		else if (left_i == n1)
+		{
+			this->_arr[i] = right[right_i];
+			right_i++;
+		}
+		else if (right[right_i] > left[left_i])
+		{
+			this->_arr[i] = left[left_i];
+			left_i++;
+		}
+		else
+		{
+			this->_arr[i] = right[right_i];
+			right_i++;
+		}
+	}
+}
+
+void	PmergeMe::insertArr(int begin, int end)
+{
+	for (int i = begin; i < end; i++)
+	{
+		int	key = this->_arr[i + 1];
+		int	j = i + 1;
+
+		while (j > begin && this->_arr[j - 1] > key)
+		{
+			this->_arr[j] = this->_arr[j - 1];
+			j--;
+		}
+		this->_arr[j] = key;
+	}
+}
+
+void	PmergeMe::sortDq(int begin, int end)
+{
+	if (end - begin > this->_limit)
+	{
+		int	mid = (begin + end) / 2;
+
+		this->sortDq(begin, mid);
+		this->sortDq(mid + 1, end);
+		this->mergeDq(begin, mid, end);
+	}
+	else
+		this->insertDq(begin, end);
+}
+
+void	PmergeMe::insertDq(int begin, int end)
+{
+	for (int i = begin; i < end; i++)
+	{
+		int	key = this->_dq[i + 1];
+		int	j = i + 1;
+
+		while (j > begin && this->_dq[j - 1] > key)
+		{
+			this->_dq[j] = this->_dq[j - 1];
+			j--;
+		}
+		this->_dq[j] = key;
+	}
+}
+
+void	PmergeMe::mergeDq(int begin, int mid, int end)
+{
+	int	n1 = mid - begin + 1;
+	int	n2 = end - mid;
+	int	right_i = 0;
+	int	left_i = 0;
+
+	std::vector<int> left(this->_dq.begin() + begin, this->_dq.begin() + mid + 1);
+	std::vector<int> right(this->_dq.begin() + mid + 1, this->_dq.begin() + end + 1);
+
+	for (int i = begin; i <= end; i++)
+	{
+		if (right_i == n2)
+		{
+			this->_dq[i] = left[left_i];
+			left_i++;
+		}
+		else if (left_i == n1)
+		{
+			this->_dq[i] = right[right_i];
+			right_i++;
+		}
+		else if (right[right_i] > left[left_i])
+		{
+			this->_dq[i] = left[left_i];
+			left_i++;
+		}
+		else
+		{
+			this->_dq[i] = right[right_i];
+			right_i++;
+		}
+	}
 }

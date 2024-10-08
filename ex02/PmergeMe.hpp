@@ -14,13 +14,15 @@
 # define PMERGEME_HPP
 
 # include <iostream>
+# include <iomanip>
+# include <sstream>
 # include <algorithm>
 # include <limits>
 # include <iomanip>
 # include <cstdlib>
 # include <string>
 # include <vector>
-# include <list>
+# include <deque>
 # include <ctime>
 
 class	PmergeMe
@@ -35,15 +37,20 @@ class	PmergeMe
 			int		getErr();
 			void	insert(std::vector<std::string> vec);
 			void	init();
-			void	sortArr();
-			void	sortLst();
+			void	sortArr(int begin, int end);
+			void	insertArr(int begin, int end);
+			void	mergeArr(int begin, int mid, int end);
+			void	sortDq(int begin, int end);
+			void	insertDq(int begin, int end);
+			void	mergeDq(int begin, int mid, int end);
 
 	private:
 			std::vector<int>	_arr;
-			std::list<int>		_lst;
+			std::deque<int>		_dq;
+			static const int	_limit = 5;
 			int					_err;
 			double				_time_arr;
-			double				_time_lst;
+			double				_time_dq;
 
 
 };
