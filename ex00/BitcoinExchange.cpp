@@ -6,7 +6,7 @@
 /*   By: mgayout <mgayout@student.42nice.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 08:13:11 by mgayout           #+#    #+#             */
-/*   Updated: 2024/10/14 08:58:48 by mgayout          ###   ########.fr       */
+/*   Updated: 2024/10/14 17:42:25 by mgayout          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@ BitcoinExchange::BitcoinExchange() : _err(0)
 {
 	std::ifstream	file("test/data.csv");
 	std::string		line, date, value;
+	int				sort;
 
 	if (!file.is_open())
 	{
@@ -33,7 +34,12 @@ BitcoinExchange::BitcoinExchange() : _err(0)
 			value = line.substr(11, line.size() - 11);
 		}
 		if (line.size() >= 11 && this->checkDate(date) && this->checkValue(value, false) && line.find(',') == 10)
+		{
 			this->_data.insert(std::make_pair(date, value));
+			date.erase(std::remove(date.begin(), date.end(), '-'), date.end());
+			sort = std::atoi(date.c_str());
+			this->_sorted.insert(sort);	
+		}
 	}
 	if (!this->_data.size())
 		this->_err = 1;
@@ -151,15 +157,55 @@ void	BitcoinExchange::init(char *arg)
 
 void	BitcoinExchange::compare(std::string date, std::string value)
 {
+	std::string	tmp, newDate;
 	double	rate, vvalue;
+	bool	changed = false;
 
+	tmp = date;
+	tmp.erase(std::remove(tmp.begin(), tmp.end(), '-'), tmp.end());
+	newDate = this->findcloser(tmp);
+	if (newDate != tmp)
+		changed = true;
 	for (std::map<std::string, std::string>::iterator it = _data.begin(); it != _data.end(); it++)
 	{
-		rate = std::atof(it->second.c_str());
-		vvalue = std::atof(value.c_str());
-		if (it->first == date && rate == vvalue)
-			this->find(date, rate, vvalue);
+		if (it->first == newDate || it->first == date)
+		{
+			rate = std::atof(it->second.c_str());
+			vvalue = std::atof(value.c_str());
+			if (!changed)
+				this->find(date, rate, vvalue);
+			else
+				this->find(newDate, rate, vvalue);
+			return;
+		}
 	}
+}
+
+std::string	BitcoinExchange::findcloser(std::string date)
+{
+	std::set<int>::iterator prev;
+	std::stringstream		ss;
+	std::string				newDate;
+	int						sort;
+
+	sort = std::atoi(date.c_str());
+	for (std::set<int>::iterator it = this->_sorted.begin(); it != this->_sorted.end(); it++)
+	{
+		if (*it == sort)
+			return date;
+		else if (*it > sort)
+		{
+			if (it == this->_sorted.begin())
+				return newDate;
+			else
+				break;
+		}
+		prev = it;
+	}
+	ss << *prev;
+	newDate = ss.str();
+	newDate = newDate.substr(0, 4) + "-" + newDate.substr(4, 2) + "-" + newDate.substr(6, 2);
+	return newDate;
 }
 
 void	BitcoinExchange::find(std::string date, double rate, double value)

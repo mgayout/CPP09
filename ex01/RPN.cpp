@@ -107,6 +107,11 @@ void	RPN::init(char *arg)
 		else if (c == '/' && this->calcul.size() >= 2)
 		{
 			double number = this->calcul.top();
+			if (number == 0)
+			{
+				std::cout << "Error: bad format" << std::endl;
+				return;
+			}
 			this->calcul.pop();
 			number = this->calcul.top() / number;
 			this->calcul.pop();
