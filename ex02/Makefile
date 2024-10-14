@@ -16,7 +16,7 @@ SRC		= main.cpp PmergeMe.cpp
 
 all: $(NAME)
 
-$(NAME):
+$(NAME): $(SRC)
 			c++ $(FLAG) $(SRC) -o $(NAME)
 
 fclean:

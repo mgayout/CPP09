@@ -255,8 +255,8 @@ void	PmergeMe::mergeDq(int begin, int mid, int end)
 	int	right_i = 0;
 	int	left_i = 0;
 
-	std::vector<int> left(this->_dq.begin() + begin, this->_dq.begin() + mid + 1);
-	std::vector<int> right(this->_dq.begin() + mid + 1, this->_dq.begin() + end + 1);
+	std::deque<int> left(this->_dq.begin() + begin, this->_dq.begin() + mid + 1);
+	std::deque<int> right(this->_dq.begin() + mid + 1, this->_dq.begin() + end + 1);
 
 	for (int i = begin; i <= end; i++)
 	{

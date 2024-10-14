@@ -16,7 +16,7 @@ SRC		= main.cpp RPN.cpp
 
 all: $(NAME)
 
-$(NAME):
+$(NAME): $(SRC)
 			c++ $(FLAG) $(SRC) -o $(NAME)
 
 fclean:

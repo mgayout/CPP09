@@ -47,11 +47,10 @@ class	PmergeMe
 	private:
 			std::vector<int>	_arr;
 			std::deque<int>		_dq;
-			static const int	_limit = 5;
+			static const int	_limit = 10;
 			int					_err;
 			double				_time_arr;
 			double				_time_dq;
-
 
 };
 

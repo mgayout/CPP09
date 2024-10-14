@@ -6,7 +6,7 @@
 /*   By: mgayout <mgayout@student.42nice.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 08:13:11 by mgayout           #+#    #+#             */
-/*   Updated: 2024/09/17 16:52:22 by mgayout          ###   ########.fr       */
+/*   Updated: 2024/10/14 08:58:48 by mgayout          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 BitcoinExchange::BitcoinExchange() : _err(0)
 {
-	std::ifstream	file("data.csv");
+	std::ifstream	file("test/data.csv");
 	std::string		line, date, value;
 
 	if (!file.is_open())
@@ -119,6 +119,7 @@ void	BitcoinExchange::init(char *arg)
 {
 	std::ifstream	file(arg);
 	std::string		line, date, value, split;
+	bool			line1 = false;
 
 	if (!file.is_open())
 	{
@@ -129,6 +130,11 @@ void	BitcoinExchange::init(char *arg)
 	{
 		if (!line.size())
 			continue;
+		if (!line1 && line == "date | value")
+		{
+			line1 = true;
+			continue;
+		}
 		if (line.size() >= 13)
 		{
 			date = line.substr(0, 10);
